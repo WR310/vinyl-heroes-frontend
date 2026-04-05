@@ -9,6 +9,23 @@ function App() {
   const [gachaLoading, setGachaLoading] = useState(false)
   const [drop, setDrop] = useState(null)
 
+  // Словарь цветов для слотов
+  const slotColors = {
+    body: '#4a90e2', // Синий
+    head: '#e67e22', // Оранжевый
+    acc: '#9b59b6',  // Фиолетовый
+    default: '#666'
+  };
+
+  const getSlotColor = (templateId) => {
+    if (!templateId) return slotColors.default;
+    const tid = templateId.toLowerCase();
+    if (tid.includes('body')) return slotColors.body;
+    if (tid.includes('head')) return slotColors.head;
+    if (tid.includes('acc')) return slotColors.acc;
+    return slotColors.default;
+  };
+
   useEffect(() => {
     const savedDeviceId = localStorage.getItem('vinyl_device_id');
     if (savedDeviceId) {
@@ -143,27 +160,49 @@ function App() {
               {inventory.length === 0 ? (
                 <p>Инвентарь пуст. Открой свой первый бокс!</p>
               ) : (
-                inventory.map((item, index) => (
-                  <div key={index} style={{ padding: '10px', background: '#242424', borderRadius: '6px', textAlign: 'left', fontSize: '14px', borderLeft: item.is_equipped ? '4px solid #4CAF50' : '4px solid #666' }}>
-                    <strong style={{ fontSize: '16px', textTransform: 'capitalize' }}>
-                      {(item.template_id || 'Неизвестный предмет').replace(/_/g, ' ')}
-                    </strong> 
-                    <div style={{ marginTop: '5px', color: '#aaa' }}>
-                      <span style={{ fontSize: '11px' }}>ID: {item.item_id?.substring(0, 8)}...</span>
-                      <br/>
-                      Статус: {item.is_equipped ? '✅ Экипировано' : '📦 В сумке'}
-                    </div>
+                inventory.map((item, index) => {
+                  const itemColor = getSlotColor(item.template_id);
+                  return (
+                    <div key={index} style={{ 
+                      padding: '12px', 
+                      background: '#242424', 
+                      borderRadius: '8px', 
+                      textAlign: 'left', 
+                      fontSize: '14px', 
+                      borderLeft: `5px solid ${item.is_equipped ? '#4CAF50' : itemColor}`,
+                      boxShadow: item.is_equipped ? '0 0 10px rgba(76, 175, 80, 0.2)' : 'none'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <strong style={{ fontSize: '16px', textTransform: 'capitalize', color: item.is_equipped ? '#4CAF50' : '#fff' }}>
+                          {(item.template_id || 'Неизвестный предмет').replace(/_/g, ' ')}
+                        </strong>
+                        {item.is_equipped && <span style={{ fontSize: '10px', background: '#4CAF50', padding: '2px 6px', borderRadius: '4px', color: '#fff' }}>ЭКИПИРОВАНО</span>}
+                      </div>
 
-                    {!item.is_equipped && (
-                      <button 
-                        onClick={() => equipItem(item.item_id)}
-                        style={{ marginTop: '10px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#4CAF50' }}
-                      >
-                        Надеть
-                      </button>
-                    )}
-                  </div>
-                ))
+                      <div style={{ marginTop: '8px', color: '#aaa', fontSize: '12px' }}>
+                        <span>ID: {item.item_id?.substring(0, 8)}...</span>
+                      </div>
+
+                      {!item.is_equipped && (
+                        <button 
+                          onClick={() => equipItem(item.item_id)}
+                          style={{ 
+                            marginTop: '12px', 
+                            width: '100%',
+                            padding: '8px', 
+                            fontSize: '12px', 
+                            backgroundColor: itemColor,
+                            border: 'none',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Надеть
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
 
