@@ -106,12 +106,16 @@ function App() {
               {gachaLoading ? 'Открываем...' : 'Открыть бокс (100 🪙)'}
             </button>
 
-            {drop && (
-              <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #646cff', borderRadius: '8px' }}>
-                <h3>🎉 Выпал предмет! 🎉</h3>
-                <pre style={{ textAlign: 'left', fontSize: '12px', overflowX: 'auto' }}>
-                  {JSON.stringify(drop, null, 2)}
-                </pre>
+            {drop && drop.reward && (
+              <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #4CAF50', borderRadius: '8px', backgroundColor: '#1a1a1a' }}>
+                <h3 style={{ margin: '0 0 10px 0' }}>🎉 Выпал предмет! 🎉</h3>
+                <div style={{ padding: '5px 0' }}>
+                  <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF50' }}>{drop.reward.item_name}</span>
+                </div>
+                <div style={{ fontSize: '14px', color: '#ccc' }}>
+                  <p style={{ margin: '4px 0' }}>Тип: {drop.reward.slot} | Редкость: {drop.reward.rarity}</p>
+                  <p style={{ margin: '4px 0' }}>Базовая сила: {drop.reward.base_power}</p>
+                </div>
               </div>
             )}
 
@@ -123,10 +127,13 @@ function App() {
                 <p>Инвентарь пуст. Открой свой первый бокс!</p>
               ) : (
                 inventory.map((item, index) => (
-                  <div key={index} style={{ padding: '10px', background: '#1a1a1a', borderRadius: '4px', textAlign: 'left', fontSize: '14px' }}>
-                    <strong>{item.item_id || 'Неизвестная пластинка'}</strong> 
-                    <br/>
-                    Количество: {item.quantity || 1}
+                  <div key={index} style={{ padding: '10px', background: '#242424', borderRadius: '6px', textAlign: 'left', fontSize: '14px', borderLeft: '4px solid #646cff' }}>
+                    <strong style={{ fontSize: '16px' }}>{item.item_name || 'Предмет инвентаря'}</strong> 
+                    <div style={{ marginTop: '5px', color: '#aaa' }}>
+                      <span style={{ fontSize: '12px' }}>ID: {item.item_id?.substring(0, 8)}...</span>
+                      <br/>
+                      Количество: {item.quantity || 1}
+                    </div>
                   </div>
                 ))
               )}
