@@ -46,9 +46,12 @@ function App() {
   const loadInventory = async (playerId) => {
     try {
       const response = await axios.get(`/api/v1/inventory/${playerId}`);
-      setInventory(response.data);
+      // Жесткая проверка: берем массив, либо ищем его внутри ключа items, иначе ставим пустой
+      const data = Array.isArray(response.data) ? response.data : (response.data?.items || []);
+      setInventory(data);
     } catch (error) {
       console.error("Ошибка загрузки инвентаря:", error);
+      setInventory([]); // При ошибке сети тоже сбрасываем в пустой массив
     }
   }
 
