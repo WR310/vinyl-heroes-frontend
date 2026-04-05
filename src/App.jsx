@@ -3,6 +3,7 @@ import axios from 'axios'
 import './App.css'
 
 function App() {
+  const [workLoading, setWorkLoading] = useState(false)
   const [player, setPlayer] = useState(null)
   const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(false)
@@ -113,18 +114,29 @@ function App() {
   };
 
   const handleWork = async () => {
-    if (!player || loading) return;
+    if (!player || workLoading) return;
+    
+    console.log("Клик по кнопке 'Работать' засчитан"); // Проверка клика
+    setWorkLoading(true);
+    
     try {
       const playerId = player.player_id || player.id;
+      console.log("Отправляем запрос для ID:", playerId);
+      
       const response = await axios.post('/api/v1/player/work', {
         player_id: playerId
       });
+      
+      console.log("Ответ сервера:", response.data);
       
       if (response.data.status === 'success') {
         setPlayer(prev => ({ ...prev, balance: response.data.new_balance }));
       }
     } catch (error) {
-      console.error("Ошибка при работе:", error);
+      console.error("Ошибка при работе:", error.response?.data || error.message);
+      alert("Ошибка сервера при попытке поработать. Проверь консоль.");
+    } finally {
+      setWorkLoading(false);
     }
   };
 
@@ -156,17 +168,20 @@ function App() {
               
               <button 
                 onClick={handleWork} 
+                disabled={workLoading}
                 style={{ 
-                  backgroundColor: '#f1c40f', 
+                  backgroundColor: workLoading ? '#ccc' : '#f1c40f', 
                   color: '#000', 
                   fontWeight: 'bold', 
                   width: '100%', 
                   marginTop: '10px',
                   border: 'none',
-                  padding: '10px'
+                  padding: '10px',
+                  cursor: workLoading ? 'not-allowed' : 'pointer',
+                  opacity: workLoading ? 0.7 : 1
                 }}
               >
-                Работать (+{10 + Math.floor((player.total_power || 0) * 0.1)} 🪙)
+                {workLoading ? 'Работаем...' : `Работать (+${10 + Math.floor((player.total_power || 0) * 0.1)} 🪙)`}
               </button>
             </div>
             
