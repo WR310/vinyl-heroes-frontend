@@ -9,7 +9,6 @@ function App() {
   const [gachaLoading, setGachaLoading] = useState(false)
   const [drop, setDrop] = useState(null)
 
-  // При первой загрузке приложения сразу пробуем залогинить пользователя
   useEffect(() => {
     const savedDeviceId = localStorage.getItem('vinyl_device_id');
     if (savedDeviceId) {
@@ -20,8 +19,8 @@ function App() {
   const login = async (existingDeviceId = null) => {
     setLoading(true)
     try {
-      // Берем существующий ID или создаем новый
-      let deviceId = existingDeviceId;
+      // Игнорируем технические события React, принимаем только строку
+      let deviceId = typeof existingDeviceId === 'string' ? existingDeviceId : null;
       if (!deviceId) {
         deviceId = "device-" + Math.floor(Math.random() * 1000000);
         localStorage.setItem('vinyl_device_id', deviceId);
@@ -33,12 +32,12 @@ function App() {
       
       setPlayer(response.data);
       
-      // Сразу после логина загружаем инвентарь
       const playerId = response.data.player_id || response.data.id;
       loadInventory(playerId);
       
     } catch (error) {
       console.error("Ошибка авторизации:", error);
+      localStorage.removeItem('vinyl_device_id'); // Очищаем битый ID
     } finally {
       setLoading(false);
     }
@@ -67,7 +66,6 @@ function App() {
       setDrop(response.data);
       setPlayer(prev => ({ ...prev, balance: prev.balance - 100 }));
       
-      // Фоново обновляем инвентарь, чтобы новый предмет там появился
       loadInventory(playerId);
       
     } catch (error) {
@@ -78,12 +76,19 @@ function App() {
     }
   }
 
+  const logout = () => {
+    localStorage.removeItem('vinyl_device_id');
+    setPlayer(null);
+    setInventory([]);
+    setDrop(null);
+  }
+
   return (
     <>
       <h1>Vinyl Heroes</h1>
       <div className="card">
         {!player ? (
-          <button onClick={() => login()} disabled={loading}>
+          <button onClick={login} disabled={loading}>
             {loading ? 'Загрузка...' : 'Играть'}
           </button>
         ) : (
@@ -123,6 +128,12 @@ function App() {
                 ))
               )}
             </div>
+
+            <hr style={{ margin: '20px 0' }} />
+            
+            <button onClick={logout} style={{ backgroundColor: '#555', fontSize: '12px' }}>
+              Сбросить аккаунт
+            </button>
           </div>
         )}
       </div>
