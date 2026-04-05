@@ -128,11 +128,13 @@ function App() {
               ) : (
                 inventory.map((item, index) => (
                   <div key={index} style={{ padding: '10px', background: '#242424', borderRadius: '6px', textAlign: 'left', fontSize: '14px', borderLeft: '4px solid #646cff' }}>
-                    <strong style={{ fontSize: '16px' }}>{item.item_name || 'Предмет инвентаря'}</strong> 
+                    <strong style={{ fontSize: '16px', textTransform: 'capitalize' }}>
+                      {(item.template_id || 'Неизвестный предмет').replace(/_/g, ' ')}
+                    </strong> 
                     <div style={{ marginTop: '5px', color: '#aaa' }}>
                       <span style={{ fontSize: '12px' }}>ID: {item.item_id?.substring(0, 8)}...</span>
                       <br/>
-                      Количество: {item.quantity || 1}
+                      Экипировано: {item.is_equipped ? 'Да' : 'Нет'}
                     </div>
                   </div>
                 ))
