@@ -19,7 +19,6 @@ function App() {
   const login = async (existingDeviceId = null) => {
     setLoading(true)
     try {
-      // Игнорируем технические события React, принимаем только строку
       let deviceId = typeof existingDeviceId === 'string' ? existingDeviceId : null;
       if (!deviceId) {
         deviceId = "device-" + Math.floor(Math.random() * 1000000);
@@ -31,13 +30,12 @@ function App() {
       });
       
       setPlayer(response.data);
-      
       const playerId = response.data.player_id || response.data.id;
       loadInventory(playerId);
       
     } catch (error) {
       console.error("Ошибка авторизации:", error);
-      localStorage.removeItem('vinyl_device_id'); // Очищаем битый ID
+      localStorage.removeItem('vinyl_device_id');
     } finally {
       setLoading(false);
     }
@@ -46,12 +44,11 @@ function App() {
   const loadInventory = async (playerId) => {
     try {
       const response = await axios.get(`/api/v1/inventory/${playerId}`);
-      // Жесткая проверка: берем массив, либо ищем его внутри ключа items, иначе ставим пустой
       const data = Array.isArray(response.data) ? response.data : (response.data?.items || []);
       setInventory(data);
     } catch (error) {
       console.error("Ошибка загрузки инвентаря:", error);
-      setInventory([]); // При ошибке сети тоже сбрасываем в пустой массив
+      setInventory([]);
     }
   }
 
@@ -61,14 +58,12 @@ function App() {
     setDrop(null);
     try {
       const playerId = player.player_id || player.id; 
-      
       const response = await axios.post('/api/v1/gacha/open', {
         player_id: playerId
       });
       
       setDrop(response.data);
       setPlayer(prev => ({ ...prev, balance: prev.balance - 100 }));
-      
       loadInventory(playerId);
       
     } catch (error) {
@@ -78,6 +73,25 @@ function App() {
       setGachaLoading(false);
     }
   }
+
+  const equipItem = async (itemId) => {
+    if (!player) return;
+    try {
+      const playerId = player.player_id || player.id;
+      const response = await axios.post('/api/v1/inventory/equip', {
+        player_id: playerId,
+        inventory_item_id: itemId
+      });
+
+      if (response.data.status === 'success') {
+        loadInventory(playerId);
+        setPlayer(prev => ({ ...prev, total_power: response.data.new_total_power }));
+      }
+    } catch (error) {
+      console.error("Ошибка экипировки:", error);
+      alert("Не удалось надеть предмет.");
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem('vinyl_device_id');
@@ -97,8 +111,11 @@ function App() {
         ) : (
           <div>
             <h3>Профиль</h3>
-            <p>ID Игрока: {player.player_id || player.id}</p>
-            <p>Баланс: {player.balance} 🪙</p>
+            <p style={{ fontSize: '12px', color: '#888' }}>ID: {player.player_id || player.id}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '10px 0' }}>
+              <span>Баланс: {player.balance} 🪙</span>
+              <span>Сила: {player.total_power || 0} 💪</span>
+            </div>
             
             <hr style={{ margin: '20px 0' }} />
             
@@ -127,15 +144,24 @@ function App() {
                 <p>Инвентарь пуст. Открой свой первый бокс!</p>
               ) : (
                 inventory.map((item, index) => (
-                  <div key={index} style={{ padding: '10px', background: '#242424', borderRadius: '6px', textAlign: 'left', fontSize: '14px', borderLeft: '4px solid #646cff' }}>
+                  <div key={index} style={{ padding: '10px', background: '#242424', borderRadius: '6px', textAlign: 'left', fontSize: '14px', borderLeft: item.is_equipped ? '4px solid #4CAF50' : '4px solid #666' }}>
                     <strong style={{ fontSize: '16px', textTransform: 'capitalize' }}>
                       {(item.template_id || 'Неизвестный предмет').replace(/_/g, ' ')}
                     </strong> 
                     <div style={{ marginTop: '5px', color: '#aaa' }}>
-                      <span style={{ fontSize: '12px' }}>ID: {item.item_id?.substring(0, 8)}...</span>
+                      <span style={{ fontSize: '11px' }}>ID: {item.item_id?.substring(0, 8)}...</span>
                       <br/>
-                      Экипировано: {item.is_equipped ? 'Да' : 'Нет'}
+                      Статус: {item.is_equipped ? '✅ Экипировано' : '📦 В сумке'}
                     </div>
+
+                    {!item.is_equipped && (
+                      <button 
+                        onClick={() => equipItem(item.item_id)}
+                        style={{ marginTop: '10px', padding: '5px 10px', fontSize: '12px', backgroundColor: '#4CAF50' }}
+                      >
+                        Надеть
+                      </button>
+                    )}
                   </div>
                 ))
               )}
@@ -143,7 +169,7 @@ function App() {
 
             <hr style={{ margin: '20px 0' }} />
             
-            <button onClick={logout} style={{ backgroundColor: '#555', fontSize: '12px' }}>
+            <button onClick={logout} style={{ backgroundColor: '#555', fontSize: '11px', opacity: 0.6 }}>
               Сбросить аккаунт
             </button>
           </div>
