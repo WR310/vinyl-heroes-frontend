@@ -80,6 +80,8 @@ function App() {
       });
       
       setDrop(response.data);
+      // После открытия бокса баланс меняется на бэкенде, 
+      // но мы обновляем его локально для мгновенного отклика
       setPlayer(prev => ({ ...prev, balance: prev.balance - 100 }));
       loadInventory(playerId);
       
@@ -110,6 +112,22 @@ function App() {
     }
   };
 
+  const handleWork = async () => {
+    if (!player || loading) return;
+    try {
+      const playerId = player.player_id || player.id;
+      const response = await axios.post('/api/v1/player/work', {
+        player_id: playerId
+      });
+      
+      if (response.data.status === 'success') {
+        setPlayer(prev => ({ ...prev, balance: response.data.new_balance }));
+      }
+    } catch (error) {
+      console.error("Ошибка при работе:", error);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('vinyl_device_id');
     setPlayer(null);
@@ -129,14 +147,32 @@ function App() {
           <div>
             <h3>Профиль</h3>
             <p style={{ fontSize: '12px', color: '#888' }}>ID: {player.player_id || player.id}</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '10px 0' }}>
-              <span>Баланс: {player.balance} 🪙</span>
-              <span>Сила: {player.total_power || 0} 💪</span>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', margin: '15px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                <span>Баланс: {player.balance} 🪙</span>
+                <span>Сила: {player.total_power || 0} 💪</span>
+              </div>
+              
+              <button 
+                onClick={handleWork} 
+                style={{ 
+                  backgroundColor: '#f1c40f', 
+                  color: '#000', 
+                  fontWeight: 'bold', 
+                  width: '100%', 
+                  marginTop: '10px',
+                  border: 'none',
+                  padding: '10px'
+                }}
+              >
+                Работать (+{10 + Math.floor((player.total_power || 0) * 0.1)} 🪙)
+              </button>
             </div>
             
             <hr style={{ margin: '20px 0' }} />
             
-            <button onClick={openBox} disabled={gachaLoading || player.balance < 100}>
+            <button onClick={openBox} disabled={gachaLoading || player.balance < 100} style={{ width: '100%' }}>
               {gachaLoading ? 'Открываем...' : 'Открыть бокс (100 🪙)'}
             </button>
 
@@ -208,7 +244,7 @@ function App() {
 
             <hr style={{ margin: '20px 0' }} />
             
-            <button onClick={logout} style={{ backgroundColor: '#555', fontSize: '11px', opacity: 0.6 }}>
+            <button onClick={logout} style={{ backgroundColor: '#555', fontSize: '11px', opacity: 0.6, width: '100%' }}>
               Сбросить аккаунт
             </button>
           </div>
