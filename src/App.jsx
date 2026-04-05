@@ -85,7 +85,7 @@ function App() {
 
   return (
     <>
-      <h1>Vinyl Heroes</h1>
+      <h1>Vinyl Heroes 2.0</h1>
       <div className="card">
         {!player ? (
           <button onClick={login} disabled={loading}>
